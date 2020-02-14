@@ -5,6 +5,7 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
+    Union,
 )
 
 K = TypeVar("K")
@@ -18,20 +19,27 @@ class Node(Generic[K, V]):
         self.key = key
         self.val = val
 
-    def __eq__(self, other: Any) -> bool:
-        assert isinstance(other, type(self))
-        return self.key == other.key
-
     def __lt__(self, other: Any) -> bool:
-        assert isinstance(other, type(self))
+        assert isinstance(other, (type(self), Infinity))
         return self.key < other.key  # type: ignore
-
-    def __gt__(self, other: Any) -> bool:
-        assert isinstance(other, type(self))
-        return self.key > other.key  # type: ignore
 
     def __repr__(self) -> str:
         return f"<Node ({self.key}, {self.val})>"
+
+
+class Infinity:
+    @property
+    def key(self):
+        return self
+
+    def __lt__(self, _other: Any) -> bool:
+        return False
+
+    def __gt__(self, _other: Any) -> bool:
+        return True
+
+
+infinity = Infinity()
 
 
 class MinHeap(Generic[K, V]):
@@ -79,35 +87,26 @@ class MinHeap(Generic[K, V]):
         right_i = left_i + 1
 
         curr = self.lst[i]
-        left: Optional[Node[K, V]]
+        left: Union[Node[K, V], Infinity]
+        right: Union[Node[K, V], Infinity]
         try:
             left = self.lst[left_i]
         except IndexError:
-            left = None
-        right: Optional[Node[K, V]]
+            left = infinity
         try:
             right = self.lst[right_i]
         except IndexError:
-            right = None
+            right = infinity
 
-        if left is not None and right is not None:
-            left_is_smaller = left < right
-        elif left is not None and right is None:
-            left_is_smaller = True
-        elif left is None and right is not None:
-            left_is_smaller = False
-        else:
-            return None
-
-        if left_is_smaller:
+        if left < right:
             el_to_compare = left
             el_to_compare_i = left_i
         else:
             el_to_compare = right
             el_to_compare_i = right_i
 
-        if curr > el_to_compare:
-            assert el_to_compare is not None
+        if el_to_compare < curr:
+            assert isinstance(el_to_compare, Node)
             self.lst[el_to_compare_i], self.lst[i] = curr, el_to_compare
             return el_to_compare_i
 
