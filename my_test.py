@@ -52,20 +52,20 @@ def get_path_lengths(node: Node[str], depth: int = 0) -> Iterator[Tuple[str, int
         yield from get_path_lengths(node.right, depth + 1)
 
 
-def force_decimal(x: Union[Fraction, int, float, Decimal]) -> Decimal:
+def force_float(x: Union[Fraction, int, float, Decimal]) -> float:
     if isinstance(x, Fraction):
-        return Decimal(x.numerator) / Decimal(x.denominator)
+        return x.numerator / x.denominator
     else:
-        return Decimal(x)
+        return float(x)
 
 
 letter_freqs = {
-    "a": Fraction(2, 3),
-    "b": Fraction(1, 3),
+    "a": 2 / 3,
+    "b": 1 / 3,
 }
 
 
-for n in range(2, 15):
+for n in range(2, 25):
     print(f"~~~~~~~~~~~~~~~~ word length: {n}")
     with timeit(lambda t: print(f"~~~~~~~~~~~~~~~~ elapsed time: {t} seconds\n")):
         words = sequences(list(letter_freqs.keys()), n)
@@ -77,7 +77,7 @@ for n in range(2, 15):
         path_lengths = list(get_path_lengths(code_book))
 
         avg_path_len = (
-            force_decimal(sum([word_freqs[word] * path_len for word, path_len in path_lengths])) / n
+            force_float(sum([word_freqs[word] * path_len for word, path_len in path_lengths])) / n
         )
 
         print(" Avg. path length:            ", avg_path_len)

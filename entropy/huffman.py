@@ -45,7 +45,7 @@ Node({self.val}):
 
 def get_code_book(dist: Distribution[K, V]) -> Node[V]:
     assert len(dist) > 0
-    assert sum(p for p, _ in dist) == 1
+    assert round(sum(p for p, _ in dist), ndigits=5) == 1
 
     heap = MinHeap()
     for p, i in dist:
