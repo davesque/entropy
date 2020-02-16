@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from decimal import Decimal
 from fractions import Fraction
 from math import log2
@@ -10,6 +11,7 @@ from typing import (
 )
 import functools
 import operator
+import time
 
 from entropy.huffman import get_code_book, Node
 
@@ -19,6 +21,14 @@ def H(P):
 
 
 T = TypeVar("T")
+
+
+@contextmanager
+def timeit(display):
+    start = time.time()
+    yield
+    end = time.time()
+    display(end - start)
 
 
 def sequences(alphabet: List[T], n: int) -> List[List[T]]:
@@ -42,24 +52,34 @@ def get_path_lengths(node: Node[str], depth: int = 0) -> Iterator[Tuple[str, int
         yield from get_path_lengths(node.right, depth + 1)
 
 
-def f_to_d(x: Union[Fraction, int]) -> Decimal:
-    return Decimal(x.numerator) / Decimal(x.denominator)
+def force_decimal(x: Union[Fraction, int, float, Decimal]) -> Decimal:
+    if isinstance(x, Fraction):
+        return Decimal(x.numerator) / Decimal(x.denominator)
+    else:
+        return Decimal(x)
 
 
 letter_freqs = {
     "a": Fraction(2, 3),
     "b": Fraction(1, 3),
 }
-n = 12
-words = sequences(list(letter_freqs.keys()), n)
-word_freqs = {"".join(w): prod(letter_freqs[l] for l in w) for w in words}
-word_distribution = [(f, w) for w, f in word_freqs.items()]
 
-code_book = get_code_book(word_distribution)
-path_lengths = list(get_path_lengths(code_book))
 
-avg_path_len = f_to_d(sum([word_freqs[word] * path_len for word, path_len in path_lengths])) / n
+for n in range(2, 15):
+    print(f"~~~~~~~~~~~~~~~~ word length: {n}")
+    with timeit(lambda t: print(f"~~~~~~~~~~~~~~~~ elapsed time: {t} seconds\n")):
+        words = sequences(list(letter_freqs.keys()), n)
 
-print("Avg. path length:            ", avg_path_len)
-print("Derivative alphabet entropy: ", H(word_freqs.values()) / n)
-print("Base alphabet entropy:       ", H(letter_freqs.values()))
+        word_freqs = {"".join(w): prod(letter_freqs[l] for l in w) for w in words}
+        word_distribution = [(f, w) for w, f in word_freqs.items()]
+
+        code_book = get_code_book(word_distribution)
+        path_lengths = list(get_path_lengths(code_book))
+
+        avg_path_len = (
+            force_decimal(sum([word_freqs[word] * path_len for word, path_len in path_lengths])) / n
+        )
+
+        print(" Avg. path length:            ", avg_path_len)
+        print(" Derivative alphabet entropy: ", H(word_freqs.values()) / n)
+        print(" Base alphabet entropy:       ", H(letter_freqs.values()))
