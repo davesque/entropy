@@ -104,10 +104,11 @@ letter_freqs = {
 }
 
 
-for n in range(14, 15):
-    print_header(f" Word Length: {n} ", align="center", filler_char="~")
+for n in range(12, 15):
+    print("")
+    print_header(f"=== WORD LENGTH: {n} ===", align="left", filler_char="=")
     with timeit(
-        lambda t: print_header(f" Elapsed Time: {t} seconds ", align="center", filler_char="~")
+        lambda t: print_header(f"=== elapsed time: {t} seconds ===", align="right", filler_char="=")
     ):
         with timeit(lambda t: print_stat("words time ", f" {t} seconds")):
             words = sequences(list(letter_freqs.keys()), n)
@@ -127,13 +128,13 @@ for n in range(14, 15):
                         for word, path_len in get_path_lengths(code_book)
                     )
                 )
-                / n
+                / n  # noqa
             )
 
         derivative_entropy = H(word_freqs.values()) / n
         base_entropy = H(letter_freqs.values())
 
-        print_header(" Totals: ", align="center", filler_char="-")
+        print_header("-- totals: --", align="center", filler_char="-")
 
         print_stat("avg. path length ", f" {avg_path_len}")
         print_stat("derivative alphabet entropy ", f" {derivative_entropy}")
