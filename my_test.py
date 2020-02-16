@@ -1,11 +1,12 @@
-from decimal import Decimal as D
-from fractions import Fraction as F
+from decimal import Decimal
+from fractions import Fraction
 from math import log2
 from typing import (
     Iterator,
     List,
     Tuple,
     TypeVar,
+    Union,
 )
 import functools
 import operator
@@ -41,13 +42,13 @@ def get_path_lengths(node: Node[str], depth: int = 0) -> Iterator[Tuple[str, int
         yield from get_path_lengths(node.right, depth + 1)
 
 
-def f_to_d(x: F) -> D:
-    return D(x.numerator) / D(x.denominator)
+def f_to_d(x: Union[Fraction, int]) -> Decimal:
+    return Decimal(x.numerator) / Decimal(x.denominator)
 
 
 letter_freqs = {
-    "a": F(2, 3),
-    "b": F(1, 3),
+    "a": Fraction(2, 3),
+    "b": Fraction(1, 3),
 }
 n = 12
 words = sequences(list(letter_freqs.keys()), n)
@@ -57,9 +58,8 @@ word_distribution = [(f, w) for w, f in word_freqs.items()]
 code_book = get_code_book(word_distribution)
 path_lengths = list(get_path_lengths(code_book))
 
-actual_entropy = f_to_d(sum([word_freqs[word] * path_len for word, path_len in path_lengths])) / n
-expected_entropy = H(word_freqs[word] for word, _ in path_lengths) / n
+avg_path_len = f_to_d(sum([word_freqs[word] * path_len for word, path_len in path_lengths])) / n
 
-print("\n", repr(actual_entropy))
-print("\n", repr(expected_entropy))
-print("\n", H([F(2, 3), F(1, 3)]))
+print("Avg. path length:            ", avg_path_len)
+print("Derivative alphabet entropy: ", H(word_freqs.values()) / n)
+print("Base alphabet entropy:       ", H(letter_freqs.values()))
