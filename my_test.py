@@ -11,6 +11,7 @@ from typing import (
 )
 import functools
 import operator
+import shutil
 import time
 
 from entropy.huffman import get_code_book, Node
@@ -59,27 +60,81 @@ def force_float(x: Union[Fraction, int, float, Decimal]) -> float:
         return float(x)
 
 
+ALIGN_SPECIFIERS = {
+    "left": "<",
+    "right": ">",
+    "center": "^",
+}
+
+
+def get_term_width() -> int:
+    return shutil.get_terminal_size((80, 20)).columns
+
+
+def align_str(inp: str, filler_char: str = " ", align: str = "right") -> str:
+    term_width = get_term_width()
+
+    align_specifier = ALIGN_SPECIFIERS[align]
+    format_str = "{:" + filler_char + align_specifier + str(term_width) + "}"
+
+    return format_str.format(inp)
+
+
+def print_header(inp: str, filler_char: str = " ", align: str = "right") -> None:
+    print(align_str(inp, filler_char=filler_char, align=align))
+
+
+def print_stat(name: str, value: str) -> None:
+    term_width = get_term_width()
+
+    if term_width % 2 == 1:
+        val_width = term_width // 2 + 1
+    else:
+        val_width = term_width // 2
+    name_width = term_width // 2
+
+    format_str = "{:.<" + str(name_width) + "}{:.>" + str(val_width) + "}"
+
+    print(format_str.format(name, value))
+
+
 letter_freqs = {
     "a": 2 / 3,
     "b": 1 / 3,
 }
 
 
-for n in range(2, 25):
-    print(f"~~~~~~~~~~~~~~~~ word length: {n}")
-    with timeit(lambda t: print(f"~~~~~~~~~~~~~~~~ elapsed time: {t} seconds\n")):
-        words = sequences(list(letter_freqs.keys()), n)
+for n in range(14, 15):
+    print_header(f" Word Length: {n} ", align="center", filler_char="~")
+    with timeit(
+        lambda t: print_header(f" Elapsed Time: {t} seconds ", align="center", filler_char="~")
+    ):
+        with timeit(lambda t: print_stat("words time ", f" {t} seconds")):
+            words = sequences(list(letter_freqs.keys()), n)
 
-        word_freqs = {"".join(w): prod(letter_freqs[l] for l in w) for w in words}
-        word_distribution = [(f, w) for w, f in word_freqs.items()]
+        with timeit(lambda t: print_stat("lookups time ", f" {t} seconds")):
+            word_freqs = {"".join(w): prod(letter_freqs[l] for l in w) for w in words}
+            word_distribution = [(f, w) for w, f in word_freqs.items()]
 
-        code_book = get_code_book(word_distribution)
-        path_lengths = list(get_path_lengths(code_book))
+        with timeit(lambda t: print_stat("code book time ", f" {t} seconds")):
+            code_book = get_code_book(word_distribution)
 
-        avg_path_len = (
-            force_float(sum([word_freqs[word] * path_len for word, path_len in path_lengths])) / n
-        )
+        with timeit(lambda t: print_stat("avg. path length time ", f" {t} seconds")):
+            avg_path_len = (
+                force_float(
+                    sum(
+                        word_freqs[word] * path_len
+                        for word, path_len in get_path_lengths(code_book)
+                    )
+                )
+                / n
+            )
 
-        print(" Avg. path length:            ", avg_path_len)
-        print(" Derivative alphabet entropy: ", H(word_freqs.values()) / n)
-        print(" Base alphabet entropy:       ", H(letter_freqs.values()))
+        derivative_entropy = H(word_freqs.values()) / n
+        base_entropy = H(letter_freqs.values())
+
+        print_header(" Totals: ", align="center", filler_char="-")
+
+        print_stat("avg. path length ", f" {avg_path_len}")
+        print_stat("derivative alphabet entropy ", f" {derivative_entropy}")
+        print_stat("base alphabet entropy ", f" {base_entropy}")
