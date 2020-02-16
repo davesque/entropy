@@ -134,7 +134,7 @@ for n in range(12, 15):
         derivative_entropy = H(word_freqs.values()) / n
         base_entropy = H(letter_freqs.values())
 
-        print_header("-- totals: --", align="center", filler_char="-")
+        print_header("--- TOTALS: ---", align="center", filler_char="-")
 
         print_stat("avg. path length ", f" {avg_path_len}")
         print_stat("derivative alphabet entropy ", f" {derivative_entropy}")
