@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import (
+    cast,
     Generic,
     List,
     Tuple,
@@ -45,7 +46,7 @@ Node({self.val}):
 
 def get_code_book(dist: Distribution[K, V]) -> Node[V]:
     assert len(dist) > 0
-    assert round(sum(p for p, _ in dist), ndigits=5) == 1
+    assert round(cast(float, sum(p for p, _ in dist)), ndigits=5) == 1
 
     heap = MinHeap()
     for p, i in dist:

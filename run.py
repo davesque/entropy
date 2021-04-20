@@ -104,38 +104,41 @@ letter_freqs = {
 }
 
 
-for n in range(12, 15):
-    print("")
-    print_header(f"=== WORD LENGTH: {n} ===", align="left", filler_char="=")
-    with timeit(
-        lambda t: print_header(f"=== elapsed time: {t} seconds ===", align="right", filler_char="=")
-    ):
-        with timeit(lambda t: print_stat("words time ", f" {t} seconds")):
-            words = sequences(list(letter_freqs.keys()), n)
-
-        with timeit(lambda t: print_stat("lookups time ", f" {t} seconds")):
-            word_freqs = {"".join(w): prod(letter_freqs[l] for l in w) for w in words}
-            word_distribution = [(f, w) for w, f in word_freqs.items()]
-
-        with timeit(lambda t: print_stat("code book time ", f" {t} seconds")):
-            code_book = get_code_book(word_distribution)
-
-        with timeit(lambda t: print_stat("avg. path length time ", f" {t} seconds")):
-            avg_path_len = (
-                force_float(
-                    sum(
-                        word_freqs[word] * path_len
-                        for word, path_len in get_path_lengths(code_book)
-                    )
-                )
-                / n  # noqa
+def run(start: int, end: int) -> None:
+    for n in range(start, end + 1):
+        print("")
+        print_header(f"=== WORD LENGTH: {n} ===", align="left", filler_char="=")
+        with timeit(
+            lambda t: print_header(
+                f"=== elapsed time: {t} seconds ===", align="right", filler_char="="
             )
+        ):
+            with timeit(lambda t: print_stat("words time ", f" {t} seconds")):
+                words = sequences(list(letter_freqs.keys()), n)
 
-        derivative_entropy = H(word_freqs.values()) / n
-        base_entropy = H(letter_freqs.values())
+            with timeit(lambda t: print_stat("lookups time ", f" {t} seconds")):
+                word_freqs = {"".join(w): prod(letter_freqs[l] for l in w) for w in words}
+                word_distribution = [(f, w) for w, f in word_freqs.items()]
 
-        print_header("--- TOTALS: ---", align="center", filler_char="-")
+            with timeit(lambda t: print_stat("code book time ", f" {t} seconds")):
+                code_book = get_code_book(word_distribution)
 
-        print_stat("avg. path length ", f" {avg_path_len}")
-        print_stat("derivative alphabet entropy ", f" {derivative_entropy}")
-        print_stat("base alphabet entropy ", f" {base_entropy}")
+            with timeit(lambda t: print_stat("avg. path length time ", f" {t} seconds")):
+                avg_path_len = (
+                    force_float(
+                        sum(
+                            word_freqs[word] * path_len
+                            for word, path_len in get_path_lengths(code_book)
+                        )
+                    )
+                    / n  # noqa
+                )
+
+            derivative_entropy = H(word_freqs.values()) / n
+            base_entropy = H(letter_freqs.values())
+
+            print_header("--- TOTALS: ---", align="center", filler_char="-")
+
+            print_stat("avg. path length ", f" {avg_path_len}")
+            print_stat("derivative alphabet entropy ", f" {derivative_entropy}")
+            print_stat("base alphabet entropy ", f" {base_entropy}")
